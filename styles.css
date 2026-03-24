@@ -166,6 +166,39 @@ body {
 	inset: 0;
 }
 
+.turrets-layer {
+	position: absolute;
+	inset: 0;
+}
+
+.turret {
+	position: absolute;
+	width: 40px;
+	height: 40px;
+	background: #2e9df7;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.5rem;
+	border: 2px solid #1e7dd8;
+	cursor: move;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.turret.placed {
+	cursor: default;
+}
+
+.turret-projectile {
+	position: absolute;
+	width: 10px;
+	height: 10px;
+	background: #ffc907;
+	border-radius: 50%;
+	pointer-events: none;
+}
+
 .droplet {
 	position: absolute;
 	width: 24px;
@@ -227,6 +260,54 @@ body {
 	font-size: 1rem;
 	font-weight: 700;
 	cursor: pointer;
+}
+
+.charity-water-link {
+	border: 2px solid var(--cw-blue);
+	background: var(--cw-blue);
+	color: #ffffff;
+	padding: 10px 18px;
+	border-radius: 8px;
+	font-size: 1rem;
+	font-weight: 700;
+	cursor: pointer;
+	text-decoration: none;
+	display: inline-block;
+	transition: background-color 220ms ease;
+	margin-top: 14px;
+}
+
+.charity-water-link:hover {
+	background-color: #1e7dd8;
+}
+
+.difficulty-buttons {
+	display: flex;
+	gap: 10px;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
+.difficulty-btn {
+	border: 2px solid #111111;
+	background: #ffffff;
+	color: #111111;
+	padding: 10px 18px;
+	border-radius: 8px;
+	font-size: 1rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: all 200ms ease;
+}
+
+.difficulty-btn:hover {
+	background-color: #f5f5f5;
+	transform: scale(1.05);
+}
+
+.difficulty-btn.selected {
+	background: #111111;
+	color: #ffffff;
 }
 
 .hidden {
@@ -306,6 +387,69 @@ body {
 
 .shop-card p {
 	margin: 4px 0;
+}
+
+.purchase-button {
+	border: 0;
+	background: var(--cw-blue);
+	color: #ffffff;
+	padding: 8px 14px;
+	border-radius: 6px;
+	font-size: 0.9rem;
+	font-weight: 700;
+	cursor: pointer;
+	width: 100%;
+	margin-top: 10px;
+	transition: background-color 200ms ease;
+}
+
+.purchase-button:hover {
+	background-color: #1e7dd8;
+}
+
+.purchase-button:disabled {
+	background-color: #cccccc;
+	cursor: not-allowed;
+}
+
+#turretStatus {
+	margin: 4px 0;
+	font-weight: 700;
+	color: var(--danger);
+}
+
+#turretStatus.purchased {
+	color: #2e9df7;
+}
+
+.selected-turret-area {
+	border-top: 2px solid #d9d9d9;
+	margin-top: 20px;
+	padding-top: 16px;
+}
+
+.selected-turret-area.hidden {
+	display: none;
+}
+
+.draggable-turret {
+	border: 2px dashed var(--cw-blue);
+	background: #e6f4ff;
+	padding: 20px;
+	border-radius: 10px;
+	text-align: center;
+	cursor: grab;
+	margin-top: 10px;
+	user-select: none;
+}
+
+.draggable-turret:active {
+	cursor: grabbing;
+}
+
+.turret-icon {
+	font-size: 3rem;
+	line-height: 1;
 }
 
 @media (min-width: 1024px) {

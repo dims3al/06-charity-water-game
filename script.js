@@ -4,19 +4,45 @@ const gameArea = document.getElementById("gameArea");
 const pathElement = document.getElementById("path");
 const wellElement = document.getElementById("well");
 const dropletLayer = document.getElementById("dropletLayer");
+const turretsLayer = document.getElementById("turretsLayer");
 const overlay = document.getElementById("overlay");
 const overlayTitle = document.getElementById("overlayTitle");
 const overlayText = document.getElementById("overlayText");
 const retryButton = document.getElementById("retryButton");
 const instructionsOverlay = document.getElementById("instructionsOverlay");
-const startButton = document.getElementById("startButton");
+const easyButton = document.getElementById("easyButton");
+const normalButton = document.getElementById("normalButton");
+const hardButton = document.getElementById("hardButton");
 const openShopButton = document.getElementById("openShopButton");
 const closeShopButton = document.getElementById("closeShopButton");
 const shopPanel = document.getElementById("shopPanel");
 const shopBackdrop = document.getElementById("shopBackdrop");
+const purchaseTurretButton = document.getElementById("purchaseTurretButton");
+const turretStatus = document.getElementById("turretStatus");
+const selectedTurretArea = document.getElementById("selectedTurretArea");
+const draggableTurret = document.getElementById("draggableTurret");
 
 const WIN_SUPPLY_LITERS = 300;
 const POLLUTED_CLICK_RADIUS = 24;
+
+// Difficulty settings
+const difficultySettings = {
+	easy: {
+		pollutionChance: 0.25,
+		spawnInterval: 1200,
+		damagePerPolluted: 15
+	},
+	normal: {
+		pollutionChance: 0.35,
+		spawnInterval: 900,
+		damagePerPolluted: 20
+	},
+	hard: {
+		pollutionChance: 0.50,
+		spawnInterval: 650,
+		damagePerPolluted: 25
+	}
+};
 
 const gameState = {
 	waterQuality: 100,
@@ -27,7 +53,15 @@ const gameState = {
 	spawnTimerId: null,
 	animationFrameId: null,
 	lastFrameTime: 0,
-	pollutionChance: 0.35
+	pollutionChance: 0.35,
+	spawnInterval: 900,
+	damagePerPolluted: 20,
+	difficulty: "normal",
+	turretPurchased: false,
+	turrets: [],
+	projectiles: [],
+	draggedTurret: null,
+	turretCost: 50
 };
 
 function openShopMenu() {
@@ -108,6 +142,156 @@ function createDroplet() {
 	dropletLayer.appendChild(dropletElement);
 }
 
+function purchaseTurret() {
+	if (gameState.waterSupplyLiters >= gameState.turretCost && !gameState.turretPurchased) {
+		gameState.waterSupplyLiters -= gameState.turretCost;
+		gameState.turretPurchased = true;
+		turretStatus.textContent = "Purchased! Drag to place on map";
+		turretStatus.classList.add("purchased");
+		purchaseTurretButton.disabled = true;
+		purchaseTurretButton.textContent = "Already Purchased";
+		selectedTurretArea.classList.remove("hidden");
+		updateStats();
+		setupDraggableTurret();
+	}
+}
+
+function createTurret(x, y) {
+	const turretElement = document.createElement("div");
+	turretElement.className = "turret placed";
+	turretElement.style.left = `${x}px`;
+	turretElement.style.top = `${y}px`;
+	turretElement.innerHTML = '<div>🛡️</div>';
+
+	const turret = {
+		element: turretElement,
+		x: x,
+		y: y,
+		radius: 20,
+		shootRange: 150,
+		shootCooldown: 0,
+		shootInterval: 500
+	};
+
+	gameState.turrets.push(turret);
+	turretsLayer.appendChild(turretElement);
+	return turret;
+}
+
+function shootProjectile(turret, targetX, targetY) {
+	const projectileElement = document.createElement("div");
+	projectileElement.className = "turret-projectile";
+	projectileElement.style.left = `${turret.x}px`;
+	projectileElement.style.top = `${turret.y}px`;
+
+	const angle = Math.atan2(targetY - turret.y, targetX - turret.x);
+	const speed = 300; // pixels per second
+
+	const projectile = {
+		element: projectileElement,
+		x: turret.x,
+		y: turret.y,
+		vx: Math.cos(angle) * speed,
+		vy: Math.sin(angle) * speed,
+		radius: 5
+	};
+
+	gameState.projectiles.push(projectile);
+	turretsLayer.appendChild(projectileElement);
+	return projectile;
+}
+
+function findNearestDroplet(turret) {
+	let closestDroplet = null;
+	let closestDistance = Infinity;
+
+	for (let i = 0; i < gameState.droplets.length; i += 1) {
+		const droplet = gameState.droplets[i];
+
+		// Only shoot polluted droplets
+		if (!droplet.isPolluted) {
+			continue;
+		}
+
+		const dx = droplet.x - turret.x;
+		const dy = droplet.y - turret.y;
+		const distance = Math.sqrt(dx * dx + dy * dy);
+
+		if (distance <= turret.shootRange && distance < closestDistance) {
+			closestDroplet = droplet;
+			closestDistance = distance;
+		}
+	}
+
+	return closestDroplet;
+}
+
+function updateTurrets(deltaTimeSeconds) {
+	for (let i = 0; i < gameState.turrets.length; i += 1) {
+		const turret = gameState.turrets[i];
+
+		// Update cooldown
+		if (turret.shootCooldown > 0) {
+			turret.shootCooldown -= deltaTimeSeconds;
+		}
+
+		// Find nearest polluted droplet
+		if (turret.shootCooldown <= 0) {
+			const target = findNearestDroplet(turret);
+			if (target) {
+				shootProjectile(turret, target.x, target.y);
+				turret.shootCooldown = turret.shootInterval / 1000;
+			}
+		}
+	}
+}
+
+function updateProjectiles(deltaTimeSeconds) {
+	for (let i = gameState.projectiles.length - 1; i >= 0; i -= 1) {
+		const projectile = gameState.projectiles[i];
+
+		// Move projectile
+		projectile.x += projectile.vx * deltaTimeSeconds;
+		projectile.y += projectile.vy * deltaTimeSeconds;
+
+		projectile.element.style.left = `${projectile.x}px`;
+		projectile.element.style.top = `${projectile.y}px`;
+
+		// Check collision with droplets
+		let hitDroplet = null;
+		for (let j = 0; j < gameState.droplets.length; j += 1) {
+			const droplet = gameState.droplets[j];
+			if (!droplet.isPolluted) {
+				continue;
+			}
+
+			const dx = projectile.x - droplet.x;
+			const dy = projectile.y - droplet.y;
+			const distance = Math.sqrt(dx * dx + dy * dy);
+
+			if (distance < projectile.radius + droplet.radius) {
+				hitDroplet = droplet;
+				break;
+			}
+		}
+
+		// Remove projectile if hit or out of bounds
+		if (hitDroplet) {
+			removeDroplet(hitDroplet);
+			if (projectile.element.parentNode) {
+				projectile.element.parentNode.removeChild(projectile.element);
+			}
+			gameState.projectiles.splice(i, 1);
+		} else if (projectile.x < -20 || projectile.x > gameArea.clientWidth + 20 ||
+			projectile.y < -20 || projectile.y > gameArea.clientHeight + 20) {
+			if (projectile.element.parentNode) {
+				projectile.element.parentNode.removeChild(projectile.element);
+			}
+			gameState.projectiles.splice(i, 1);
+		}
+	}
+}
+
 function handlePollutedDropClick(event) {
 	if (gameState.isGameOver) {
 		return;
@@ -157,7 +341,7 @@ function removeDroplet(droplet) {
 
 function handleDropletReachedWell(droplet) {
 	if (droplet.isPolluted) {
-		gameState.waterQuality -= 20;
+		gameState.waterQuality -= gameState.damagePerPolluted;
 	} else {
 		gameState.waterSupplyLiters += 10;
 	}
@@ -175,7 +359,7 @@ function handleDropletReachedWell(droplet) {
 	}
 }
 
-function animateDroplets(timestamp) {
+function animateFrame(timestamp) {
 	if (gameState.isGameOver) {
 		return;
 	}
@@ -202,13 +386,37 @@ function animateDroplets(timestamp) {
 		}
 	}
 
-	gameState.animationFrameId = requestAnimationFrame(animateDroplets);
+	// Update turrets and projectiles
+	updateTurrets(deltaTimeSeconds);
+	updateProjectiles(deltaTimeSeconds);
+
+	gameState.animationFrameId = requestAnimationFrame(animateFrame);
 }
 
 function clearAllDroplets() {
 	for (let i = gameState.droplets.length - 1; i >= 0; i -= 1) {
 		removeDroplet(gameState.droplets[i]);
 	}
+}
+
+function clearAllTurrets() {
+	for (let i = gameState.turrets.length - 1; i >= 0; i -= 1) {
+		const turret = gameState.turrets[i];
+		if (turret.element.parentNode) {
+			turret.element.parentNode.removeChild(turret.element);
+		}
+	}
+	gameState.turrets = [];
+}
+
+function clearAllProjectiles() {
+	for (let i = gameState.projectiles.length - 1; i >= 0; i -= 1) {
+		const projectile = gameState.projectiles[i];
+		if (projectile.element.parentNode) {
+			projectile.element.parentNode.removeChild(projectile.element);
+		}
+	}
+	gameState.projectiles = [];
 }
 
 function endGame(didWin) {
@@ -229,13 +437,46 @@ function endGame(didWin) {
 	overlay.classList.remove("hidden");
 }
 
+function setDifficulty(difficulty) {
+	gameState.difficulty = difficulty;
+	const settings = difficultySettings[difficulty];
+	gameState.pollutionChance = settings.pollutionChance;
+	gameState.spawnInterval = settings.spawnInterval;
+	gameState.damagePerPolluted = settings.damagePerPolluted;
+
+	// Update button states
+	easyButton.classList.remove("selected");
+	normalButton.classList.remove("selected");
+	hardButton.classList.remove("selected");
+
+	if (difficulty === "easy") {
+		easyButton.classList.add("selected");
+	} else if (difficulty === "normal") {
+		normalButton.classList.add("selected");
+	} else if (difficulty === "hard") {
+		hardButton.classList.add("selected");
+	}
+}
+
 function startGame() {
 	gameState.waterQuality = 100;
 	gameState.waterSupplyLiters = 0;
 	gameState.isGameOver = false;
 	gameState.lastFrameTime = 0;
+	gameState.turretPurchased = false;
+	gameState.draggedTurret = null;
 
 	clearAllDroplets();
+	clearAllTurrets();
+	clearAllProjectiles();
+
+	// Reset turret purchase UI
+	turretStatus.textContent = "Not purchased";
+	turretStatus.classList.remove("purchased");
+	purchaseTurretButton.disabled = false;
+	purchaseTurretButton.textContent = "Purchase";
+	selectedTurretArea.classList.add("hidden");
+
 	gameArea.classList.remove("win-celebration");
 	updateStats();
 	layoutGameObjects();
@@ -243,16 +484,85 @@ function startGame() {
 	overlay.classList.add("hidden");
 	instructionsOverlay.classList.add("hidden");
 
-	gameState.spawnTimerId = setInterval(createDroplet, 900);
-	gameState.animationFrameId = requestAnimationFrame(animateDroplets);
+	gameState.spawnTimerId = setInterval(createDroplet, gameState.spawnInterval);
+	gameState.animationFrameId = requestAnimationFrame(animateFrame);
 }
 
+function setupDraggableTurret() {
+	let isDragging = false;
+	let offsetX = 0;
+	let offsetY = 0;
+
+	draggableTurret.addEventListener("mousedown", (e) => {
+		isDragging = true;
+		const rect = draggableTurret.getBoundingClientRect();
+		offsetX = e.clientX - rect.left;
+		offsetY = e.clientY - rect.top;
+		draggableTurret.style.opacity = "0.7";
+	});
+
+	document.addEventListener("mousemove", (e) => {
+		if (!isDragging || !gameState.turretPurchased) {
+			return;
+		}
+
+		const gameAreaRect = gameArea.getBoundingClientRect();
+		const x = e.clientX - gameAreaRect.left - offsetX;
+		const y = e.clientY - gameAreaRect.top - offsetY;
+
+		// Allow dragging only within game area bounds
+		if (x >= 0 && x <= gameAreaRect.width - 40 && y >= 0 && y <= gameAreaRect.height - 40) {
+			draggableTurret.style.position = "fixed";
+			draggableTurret.style.left = `${e.clientX - offsetX}px`;
+			draggableTurret.style.top = `${e.clientY - offsetY}px`;
+			draggableTurret.style.pointerEvents = "none";
+		}
+	});
+
+	document.addEventListener("mouseup", (e) => {
+		if (!isDragging) {
+			return;
+		}
+
+		isDragging = false;
+		draggableTurret.style.opacity = "1";
+		draggableTurret.style.position = "relative";
+		draggableTurret.style.left = "0";
+		draggableTurret.style.top = "0";
+		draggableTurret.style.pointerEvents = "auto";
+
+		const gameAreaRect = gameArea.getBoundingClientRect();
+		const x = e.clientX - gameAreaRect.left - offsetX;
+		const y = e.clientY - gameAreaRect.top - offsetY;
+
+		// Place turret only if dropped within game area
+		if (x >= 0 && x <= gameAreaRect.width - 40 && y >= 0 && y <= gameAreaRect.height - 40) {
+			createTurret(x, y);
+			gameState.turretPurchased = false;
+			selectedTurretArea.classList.add("hidden");
+		}
+	});
+}
+
+// Event listeners
 retryButton.addEventListener("click", startGame);
-startButton.addEventListener("click", startGame);
+easyButton.addEventListener("click", () => {
+	setDifficulty("easy");
+	startGame();
+});
+normalButton.addEventListener("click", () => {
+	setDifficulty("normal");
+	startGame();
+});
+hardButton.addEventListener("click", () => {
+	setDifficulty("hard");
+	startGame();
+});
 gameArea.addEventListener("click", handlePollutedDropClick);
 openShopButton.addEventListener("click", openShopMenu);
 closeShopButton.addEventListener("click", closeShopMenu);
 shopBackdrop.addEventListener("click", closeShopMenu);
+purchaseTurretButton.addEventListener("click", purchaseTurret);
 
 window.addEventListener("keydown", (event) => {
 	if (event.key === "Escape" && gameState.isShopOpen) {
@@ -264,5 +574,7 @@ window.addEventListener("resize", () => {
 	layoutGameObjects();
 });
 
+// Initialize difficulty to normal
+setDifficulty("normal");
 layoutGameObjects();
 updateStats();
