@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Well Defense</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="app">
+        <section class="top-bar">
+            <div class="brand-block">
+                <img src="img/water-can-transparent.png" alt="charity: water logo" class="brand-logo">
+                <span class="brand-text">charity: water</span>
+            </div>
+
+            <h1 class="game-title">Well Defense</h1>
+
+            <div class="stats">
+                <p>Water Quality: <span id="waterQualityValue">100%</span></p>
+                <p>Water Supply: <span id="waterSupplyValue">0 L</span></p>
+                <button id="openShopButton" class="shop-button">Purchase Menu</button>
+            </div>
+        </section>
+
+        <section class="game-area" id="gameArea">
+            <div class="path" id="path"></div>
+            <div class="well" id="well">WELL</div>
+            <div class="droplet-layer" id="dropletLayer"></div>
+
+            <div class="overlay hidden" id="overlay">
+                <h2 id="overlayTitle">Game Over</h2>
+                <p id="overlayText">Water quality reached zero.</p>
+                <button id="retryButton">Retry</button>
+            </div>
+
+            <div class="overlay" id="instructionsOverlay">
+                <h2>How To Play</h2>
+                <p>Well Defense: click on the black droplets to destroy them.</p>
+                <p>You win when the water supply reaches 300 L.</p>
+                <p>You lose when too many bad droplets hit the well and water quality reaches 0%.</p>
+                <button id="startButton">Start Game</button>
+            </div>
+        </section>
+
+        <div class="shop-backdrop hidden" id="shopBackdrop"></div>
+
+        <aside class="shop-panel" id="shopPanel" aria-hidden="true">
+            <div class="shop-header">
+                <h2>Purchase Screen</h2>
+                <button id="closeShopButton" class="shop-close-button" aria-label="Close purchase menu">Close</button>
+            </div>
+
+            <p class="shop-subtitle">Placeholders for future tower and upgrade purchases.</p>
+
+            <div class="shop-list">
+                <article class="shop-card">
+                    <h3>Filter Turret (Placeholder)</h3>
+                    <p>Cost: 120 L</p>
+                    <p>Future effect: Auto-target nearby polluted droplets.</p>
+                </article>
+
+                <article class="shop-card">
+                    <h3>Quality Shield (Placeholder)</h3>
+                    <p>Cost: 180 L</p>
+                    <p>Future effect: Reduces quality damage from bad droplets.</p>
+                </article>
+
+                <article class="shop-card">
+                    <h3>Flow Booster (Placeholder)</h3>
+                    <p>Cost: 90 L</p>
+                    <p>Future effect: Increases water collected from good droplets.</p>
+                </article>
+            </div>
+        </aside>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
