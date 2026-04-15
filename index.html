@@ -69,6 +69,14 @@
                     <p id="turretStatus">Not purchased</p>
                     <button id="purchaseTurretButton" class="purchase-button">Purchase</button>
                 </article>
+
+                <article class="shop-card">
+                    <h3>Safety Net Barrier</h3>
+                    <p>Cost: 80 L</p>
+                    <p>Effect: Stops polluted droplets with 8 durability</p>
+                    <p id="barrierStatus">Not purchased</p>
+                    <button id="purchaseBarrierButton" class="purchase-button purchase-barrier-button">Purchase</button>
+                </article>
             </div>
             
             <div id="selectedTurretArea" class="selected-turret-area hidden">
@@ -76,6 +84,14 @@
                 <p>Drag the turret to the game map to place it.</p>
                 <div id="draggableTurret" class="draggable-turret">
                     <div class="turret-icon">🛡️</div>
+                </div>
+            </div>
+
+            <div id="selectedBarrierArea" class="selected-turret-area hidden">
+                <h3>Purchased!</h3>
+                <p>Drag the barrier to the game map to place it.</p>
+                <div id="draggableBarrier" class="draggable-barrier">
+                    <div class="barrier-icon">🧱</div>
                 </div>
             </div>
         </aside>

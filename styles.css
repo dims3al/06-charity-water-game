@@ -4,6 +4,8 @@
 	--path-gray: #8f8f8f;
 	--ink: #1c1c1c;
 	--danger: #f5402c;
+	--mint: #2fb66e;
+	--panel-cream: #fff7de;
 }
 
 * {
@@ -12,9 +14,12 @@
 
 body {
 	margin: 0;
-	font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+	font-family: "Verdana", "Trebuchet MS", "Segoe UI", sans-serif;
 	color: var(--ink);
-	background-color: var(--cw-yellow);
+	background:
+		radial-gradient(circle at 18% 15%, #ffe895 0 140px, transparent 141px),
+		radial-gradient(circle at 85% 20%, #ffd95b 0 160px, transparent 161px),
+		linear-gradient(140deg, #ffcf1f 0%, #ffd73e 45%, #ffc907 100%);
 }
 
 .app {
@@ -25,20 +30,24 @@ body {
 }
 
 .top-bar {
-	background-color: #ffffff;
+	background: linear-gradient(90deg, #fffdf5 0%, #ffffff 60%, #fff7dd 100%);
 	padding: 12px 18px;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	gap: 16px;
-	border-bottom: 2px solid #d9d9d9;
+	border-bottom: 3px solid #111111;
 	position: relative;
 	min-height: 84px;
+	box-shadow: 0 8px 18px rgba(17, 17, 17, 0.12);
 }
 
 .game-title {
 	margin: 0;
-	font-size: 1.5rem;
+	font-size: 1.6rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	text-shadow: 0 2px 0 #ffe38a;
 	position: absolute;
 	left: 50%;
 	transform: translateX(-50%);
@@ -77,6 +86,10 @@ body {
 .stats p {
 	margin: 0;
 	font-weight: 700;
+	padding: 6px 10px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.65);
+	border: 1px solid rgba(17, 17, 17, 0.2);
 }
 
 .shop-button {
@@ -84,17 +97,31 @@ body {
 	background: #111111;
 	color: #ffffff;
 	padding: 9px 14px;
-	border-radius: 8px;
+	border-radius: 999px;
 	font-size: 0.95rem;
 	font-weight: 700;
 	cursor: pointer;
+	transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.shop-button:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 6px 16px rgba(17, 17, 17, 0.25);
 }
 
 .game-area {
 	position: relative;
 	flex: 1;
 	overflow: hidden;
-	background-color: var(--cw-yellow);
+	background:
+		repeating-linear-gradient(
+			-35deg,
+			rgba(255, 255, 255, 0.14),
+			rgba(255, 255, 255, 0.14) 16px,
+			rgba(255, 255, 255, 0.03) 16px,
+			rgba(255, 255, 255, 0.03) 32px
+		),
+		linear-gradient(160deg, #ffd74b 0%, #ffca1d 100%);
 }
 
 .game-area.win-celebration {
@@ -144,8 +171,9 @@ body {
 
 .path {
 	position: absolute;
-	background-color: var(--path-gray);
-	border-radius: 8px;
+	background: linear-gradient(180deg, #9f9f9f 0%, #8a8a8a 50%, #7a7a7a 100%);
+	border-radius: 12px;
+	box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.28), inset 0 -2px 6px rgba(0, 0, 0, 0.22);
 }
 
 .well {
@@ -159,6 +187,8 @@ body {
 	justify-content: center;
 	font-weight: 800;
 	letter-spacing: 0.5px;
+	border-radius: 12px;
+	box-shadow: 0 7px 0 rgba(34, 34, 34, 0.28);
 }
 
 .droplet-layer {
@@ -175,7 +205,7 @@ body {
 	position: absolute;
 	width: 40px;
 	height: 40px;
-	background: #2e9df7;
+	background: radial-gradient(circle at 35% 35%, #6dc1ff 0%, #2e9df7 65%, #1d6eb3 100%);
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
@@ -194,8 +224,27 @@ body {
 	position: absolute;
 	width: 10px;
 	height: 10px;
-	background: #ffc907;
+	background: #fff5b6;
+	border: 2px solid #ffb900;
 	border-radius: 50%;
+	pointer-events: none;
+}
+
+.barrier {
+	position: absolute;
+	width: 18px;
+	height: 120px;
+	border-radius: 12px;
+	background: linear-gradient(180deg, #59d08a 0%, #20a660 100%);
+	border: 2px solid #187447;
+	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #ffffff;
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
 	pointer-events: none;
 }
 
@@ -208,18 +257,19 @@ body {
 }
 
 .droplet.good {
-	background-color: var(--cw-blue);
+	background: radial-gradient(circle at 30% 30%, #9ed7ff 0%, #2e9df7 70%, #1f6cab 100%);
 }
 
 .droplet.polluted {
-	background-color: #111111;
+	background: radial-gradient(circle at 35% 35%, #555555 0%, #202020 45%, #0d0d0d 100%);
 	cursor: crosshair;
 }
 
 .overlay {
 	position: absolute;
 	inset: 0;
-	background: rgba(255, 255, 255, 0.85);
+	background: rgba(255, 252, 240, 0.9);
+	backdrop-filter: blur(2px);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -240,23 +290,13 @@ body {
 	font-weight: 700;
 }
 
-#retryButton {
-	border: 0;
-	background: #111111;
-	color: #ffffff;
-	padding: 10px 18px;
-	border-radius: 8px;
-	font-size: 1rem;
-	font-weight: 700;
-	cursor: pointer;
-}
-
+#retryButton,
 #startButton {
 	border: 0;
 	background: #111111;
 	color: #ffffff;
 	padding: 10px 18px;
-	border-radius: 8px;
+	border-radius: 999px;
 	font-size: 1rem;
 	font-weight: 700;
 	cursor: pointer;
@@ -267,7 +307,7 @@ body {
 	background: var(--cw-blue);
 	color: #ffffff;
 	padding: 10px 18px;
-	border-radius: 8px;
+	border-radius: 999px;
 	font-size: 1rem;
 	font-weight: 700;
 	cursor: pointer;
@@ -293,7 +333,7 @@ body {
 	background: #ffffff;
 	color: #111111;
 	padding: 10px 18px;
-	border-radius: 8px;
+	border-radius: 999px;
 	font-size: 1rem;
 	font-weight: 700;
 	cursor: pointer;
@@ -327,7 +367,7 @@ body {
 	right: 0;
 	width: min(360px, 92vw);
 	height: 100vh;
-	background: #ffffff;
+	background: linear-gradient(180deg, #fffef9 0%, var(--panel-cream) 100%);
 	border-left: 3px solid #111111;
 	padding: 18px;
 	box-shadow: -6px 0 24px rgba(0, 0, 0, 0.2);
@@ -358,7 +398,7 @@ body {
 	background: #111111;
 	color: #ffffff;
 	padding: 8px 12px;
-	border-radius: 7px;
+	border-radius: 999px;
 	font-weight: 700;
 	cursor: pointer;
 }
@@ -377,7 +417,8 @@ body {
 	border: 2px solid #111111;
 	border-radius: 10px;
 	padding: 12px;
-	background: #fffaf0;
+	background: #fffef8;
+	box-shadow: 0 5px 0 rgba(17, 17, 17, 0.15);
 }
 
 .shop-card h3 {
@@ -394,61 +435,85 @@ body {
 	background: var(--cw-blue);
 	color: #ffffff;
 	padding: 8px 14px;
-	border-radius: 6px;
+	border-radius: 999px;
 	font-size: 0.9rem;
 	font-weight: 700;
 	cursor: pointer;
 	width: 100%;
 	margin-top: 10px;
-	transition: background-color 200ms ease;
+	transition: transform 180ms ease;
 }
 
 .purchase-button:hover {
-	background-color: #1e7dd8;
+	transform: translateY(-1px);
 }
 
 .purchase-button:disabled {
 	background-color: #cccccc;
 	cursor: not-allowed;
+	transform: none;
 }
 
-#turretStatus {
+.purchase-button.purchase-barrier-button {
+	background: var(--mint);
+}
+
+#turretStatus,
+#barrierStatus {
 	margin: 4px 0;
 	font-weight: 700;
 	color: var(--danger);
 }
 
-#turretStatus.purchased {
-	color: #2e9df7;
+#turretStatus.purchased,
+#barrierStatus.purchased {
+	color: #178b50;
 }
 
 .selected-turret-area {
-	border-top: 2px solid #d9d9d9;
-	margin-top: 20px;
-	padding-top: 16px;
+	margin-top: 14px;
+	border: 2px dashed #111111;
+	border-radius: 10px;
+	padding: 12px;
+	background: rgba(255, 255, 255, 0.7);
 }
 
 .selected-turret-area.hidden {
 	display: none;
 }
 
-.draggable-turret {
-	border: 2px dashed var(--cw-blue);
-	background: #e6f4ff;
-	padding: 20px;
+.draggable-turret,
+.draggable-barrier {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	border-radius: 10px;
 	text-align: center;
 	cursor: grab;
 	margin-top: 10px;
 	user-select: none;
+	background: #ffffff;
+	border: 2px dashed #111111;
 }
 
-.draggable-turret:active {
+.draggable-turret {
+	width: 72px;
+	height: 72px;
+}
+
+.draggable-barrier {
+	width: 52px;
+	height: 88px;
+}
+
+.draggable-turret:active,
+.draggable-barrier:active {
 	cursor: grabbing;
 }
 
-.turret-icon {
-	font-size: 3rem;
+.turret-icon,
+.barrier-icon {
+	font-size: 2.2rem;
 	line-height: 1;
 }
 
@@ -499,7 +564,7 @@ body {
 	}
 
 	.game-area {
-		min-height: calc(100vh - 170px);
+		min-height: calc(100vh - 190px);
 	}
 
 	.overlay h2 {

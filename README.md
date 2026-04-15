@@ -1,5 +1,7 @@
 # Charity: water Game Prototype
 
-In this project, you’ll begin transforming your game concept from last week into a working interactive prototype using HTML, CSS, and JavaScript.
+This project is a game that is about defending a well from polluted water. You click on the black water droplets to prevent them from getting to the well. The normal water droplets go to the well and increase your water supply. You can use the water supply to buy defenses. 
 
-This first version should focus on core functionality — clickable elements, score tracking, and a basic layout. The goal is to bring your idea to life with simple, working mechanics that you’ll refine and expand in the next milestone.
+The game is very easy to beat because it is just for showcasing. 
+
+The challenges I faced from it were issues with the purchase screen and defenses. I also had trouble with the design of the map and scope of the project towards what I could do with it. 

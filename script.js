@@ -21,9 +21,16 @@ const purchaseTurretButton = document.getElementById("purchaseTurretButton");
 const turretStatus = document.getElementById("turretStatus");
 const selectedTurretArea = document.getElementById("selectedTurretArea");
 const draggableTurret = document.getElementById("draggableTurret");
+const purchaseBarrierButton = document.getElementById("purchaseBarrierButton");
+const barrierStatus = document.getElementById("barrierStatus");
+const selectedBarrierArea = document.getElementById("selectedBarrierArea");
+const draggableBarrier = document.getElementById("draggableBarrier");
 
 const WIN_SUPPLY_LITERS = 300;
 const POLLUTED_CLICK_RADIUS = 24;
+const BARRIER_WIDTH = 18;
+const BARRIER_HEIGHT = 120;
+const BARRIER_DURABILITY = 8;
 
 // Difficulty settings
 const difficultySettings = {
@@ -58,10 +65,16 @@ const gameState = {
 	damagePerPolluted: 20,
 	difficulty: "normal",
 	turretPurchased: false,
+	barrierPurchased: false,
 	turrets: [],
+	barriers: [],
 	projectiles: [],
 	draggedTurret: null,
-	turretCost: 50
+	draggedBarrier: null,
+	turretCost: 50,
+	barrierCost: 80,
+	isTurretDragReady: false,
+	isBarrierDragReady: false
 };
 
 function openShopMenu() {
@@ -156,6 +169,20 @@ function purchaseTurret() {
 	}
 }
 
+function purchaseBarrier() {
+	if (gameState.waterSupplyLiters >= gameState.barrierCost && !gameState.barrierPurchased) {
+		gameState.waterSupplyLiters -= gameState.barrierCost;
+		gameState.barrierPurchased = true;
+		barrierStatus.textContent = "Purchased! Drag to place on map";
+		barrierStatus.classList.add("purchased");
+		purchaseBarrierButton.disabled = true;
+		purchaseBarrierButton.textContent = "Already Purchased";
+		selectedBarrierArea.classList.remove("hidden");
+		updateStats();
+		setupDraggableBarrier();
+	}
+}
+
 function createTurret(x, y) {
 	const turretElement = document.createElement("div");
 	turretElement.className = "turret placed";
@@ -176,6 +203,38 @@ function createTurret(x, y) {
 	gameState.turrets.push(turret);
 	turretsLayer.appendChild(turretElement);
 	return turret;
+}
+
+function createBarrier(x, y) {
+	const barrierElement = document.createElement("div");
+	barrierElement.className = "barrier";
+	barrierElement.style.left = `${x}px`;
+	barrierElement.style.top = `${y}px`;
+	barrierElement.textContent = `${BARRIER_DURABILITY}`;
+
+	const barrier = {
+		element: barrierElement,
+		x,
+		y,
+		width: BARRIER_WIDTH,
+		height: BARRIER_HEIGHT,
+		durability: BARRIER_DURABILITY
+	};
+
+	gameState.barriers.push(barrier);
+	turretsLayer.appendChild(barrierElement);
+	return barrier;
+}
+
+function removeBarrier(barrier) {
+	const barrierIndex = gameState.barriers.indexOf(barrier);
+	if (barrierIndex >= 0) {
+		gameState.barriers.splice(barrierIndex, 1);
+	}
+
+	if (barrier.element.parentNode) {
+		barrier.element.parentNode.removeChild(barrier.element);
+	}
 }
 
 function shootProjectile(turret, targetX, targetY) {
@@ -292,6 +351,38 @@ function updateProjectiles(deltaTimeSeconds) {
 	}
 }
 
+function updateBarrierCollisions() {
+	for (let i = gameState.barriers.length - 1; i >= 0; i -= 1) {
+		const barrier = gameState.barriers[i];
+		const barrierTop = barrier.y;
+		const barrierBottom = barrier.y + barrier.height;
+		const barrierLeft = barrier.x;
+		const barrierRight = barrier.x + barrier.width;
+
+		for (let j = gameState.droplets.length - 1; j >= 0; j -= 1) {
+			const droplet = gameState.droplets[j];
+
+			if (!droplet.isPolluted) {
+				continue;
+			}
+
+			const isInsideBarrierX = droplet.x + droplet.radius >= barrierLeft && droplet.x - droplet.radius <= barrierRight;
+			const isInsideBarrierY = droplet.y + droplet.radius >= barrierTop && droplet.y - droplet.radius <= barrierBottom;
+
+			if (isInsideBarrierX && isInsideBarrierY) {
+				removeDroplet(droplet);
+				barrier.durability -= 1;
+				barrier.element.textContent = `${Math.max(0, barrier.durability)}`;
+
+				if (barrier.durability <= 0) {
+					removeBarrier(barrier);
+					break;
+				}
+			}
+		}
+	}
+}
+
 function handlePollutedDropClick(event) {
 	if (gameState.isGameOver) {
 		return;
@@ -389,6 +480,7 @@ function animateFrame(timestamp) {
 	// Update turrets and projectiles
 	updateTurrets(deltaTimeSeconds);
 	updateProjectiles(deltaTimeSeconds);
+	updateBarrierCollisions();
 
 	gameState.animationFrameId = requestAnimationFrame(animateFrame);
 }
@@ -407,6 +499,16 @@ function clearAllTurrets() {
 		}
 	}
 	gameState.turrets = [];
+}
+
+function clearAllBarriers() {
+	for (let i = gameState.barriers.length - 1; i >= 0; i -= 1) {
+		const barrier = gameState.barriers[i];
+		if (barrier.element.parentNode) {
+			barrier.element.parentNode.removeChild(barrier.element);
+		}
+	}
+	gameState.barriers = [];
 }
 
 function clearAllProjectiles() {
@@ -464,10 +566,13 @@ function startGame() {
 	gameState.isGameOver = false;
 	gameState.lastFrameTime = 0;
 	gameState.turretPurchased = false;
+	gameState.barrierPurchased = false;
 	gameState.draggedTurret = null;
+	gameState.draggedBarrier = null;
 
 	clearAllDroplets();
 	clearAllTurrets();
+	clearAllBarriers();
 	clearAllProjectiles();
 
 	// Reset turret purchase UI
@@ -476,6 +581,11 @@ function startGame() {
 	purchaseTurretButton.disabled = false;
 	purchaseTurretButton.textContent = "Purchase";
 	selectedTurretArea.classList.add("hidden");
+	barrierStatus.textContent = "Not purchased";
+	barrierStatus.classList.remove("purchased");
+	purchaseBarrierButton.disabled = false;
+	purchaseBarrierButton.textContent = "Purchase";
+	selectedBarrierArea.classList.add("hidden");
 
 	gameArea.classList.remove("win-celebration");
 	updateStats();
@@ -489,6 +599,12 @@ function startGame() {
 }
 
 function setupDraggableTurret() {
+	if (gameState.isTurretDragReady) {
+		return;
+	}
+
+	gameState.isTurretDragReady = true;
+
 	let isDragging = false;
 	let offsetX = 0;
 	let offsetY = 0;
@@ -544,6 +660,68 @@ function setupDraggableTurret() {
 	});
 }
 
+function setupDraggableBarrier() {
+	if (gameState.isBarrierDragReady) {
+		return;
+	}
+
+	gameState.isBarrierDragReady = true;
+
+	let isDragging = false;
+	let offsetX = 0;
+	let offsetY = 0;
+
+	draggableBarrier.addEventListener("mousedown", (e) => {
+		isDragging = true;
+		const rect = draggableBarrier.getBoundingClientRect();
+		offsetX = e.clientX - rect.left;
+		offsetY = e.clientY - rect.top;
+		draggableBarrier.style.opacity = "0.7";
+	});
+
+	document.addEventListener("mousemove", (e) => {
+		if (!isDragging || !gameState.barrierPurchased) {
+			return;
+		}
+
+		const gameAreaRect = gameArea.getBoundingClientRect();
+		const x = e.clientX - gameAreaRect.left - offsetX;
+		const y = e.clientY - gameAreaRect.top - offsetY;
+
+		// Allow dragging only within game area bounds
+		if (x >= 0 && x <= gameAreaRect.width - BARRIER_WIDTH && y >= 0 && y <= gameAreaRect.height - BARRIER_HEIGHT) {
+			draggableBarrier.style.position = "fixed";
+			draggableBarrier.style.left = `${e.clientX - offsetX}px`;
+			draggableBarrier.style.top = `${e.clientY - offsetY}px`;
+			draggableBarrier.style.pointerEvents = "none";
+		}
+	});
+
+	document.addEventListener("mouseup", (e) => {
+		if (!isDragging) {
+			return;
+		}
+
+		isDragging = false;
+		draggableBarrier.style.opacity = "1";
+		draggableBarrier.style.position = "relative";
+		draggableBarrier.style.left = "0";
+		draggableBarrier.style.top = "0";
+		draggableBarrier.style.pointerEvents = "auto";
+
+		const gameAreaRect = gameArea.getBoundingClientRect();
+		const x = e.clientX - gameAreaRect.left - offsetX;
+		const y = e.clientY - gameAreaRect.top - offsetY;
+
+		// Place barrier only if dropped within game area
+		if (x >= 0 && x <= gameAreaRect.width - BARRIER_WIDTH && y >= 0 && y <= gameAreaRect.height - BARRIER_HEIGHT) {
+			createBarrier(x, y);
+			gameState.barrierPurchased = false;
+			selectedBarrierArea.classList.add("hidden");
+		}
+	});
+}
+
 // Event listeners
 retryButton.addEventListener("click", startGame);
 easyButton.addEventListener("click", () => {
@@ -563,6 +741,7 @@ openShopButton.addEventListener("click", openShopMenu);
 closeShopButton.addEventListener("click", closeShopMenu);
 shopBackdrop.addEventListener("click", closeShopMenu);
 purchaseTurretButton.addEventListener("click", purchaseTurret);
+purchaseBarrierButton.addEventListener("click", purchaseBarrier);
 
 window.addEventListener("keydown", (event) => {
 	if (event.key === "Escape" && gameState.isShopOpen) {
